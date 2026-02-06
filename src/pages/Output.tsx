@@ -14,6 +14,7 @@ import {
   Eye,
   Calendar,
   FolderOpen,
+  HardDrive,
 } from 'lucide-react'
 
 // Mock output files
@@ -68,11 +69,11 @@ const outputFiles = [
   },
 ]
 
-const typeConfig: Record<string, { icon: typeof Image; color: string; label: string }> = {
-  image: { icon: Image, color: 'text-pink-400 bg-pink-500/10', label: 'Images' },
-  document: { icon: FileText, color: 'text-blue-400 bg-blue-500/10', label: 'Documents' },
-  data: { icon: Database, color: 'text-green-400 bg-green-500/10', label: 'Data' },
-  web: { icon: Globe, color: 'text-purple-400 bg-purple-500/10', label: 'Web' },
+const typeConfig: Record<string, { icon: typeof Image; color: string; gradient: string; label: string }> = {
+  image: { icon: Image, color: 'text-pink-400', gradient: 'from-pink-500/20 to-rose-500/20', label: '图片' },
+  document: { icon: FileText, color: 'text-blue-400', gradient: 'from-blue-500/20 to-cyan-500/20', label: '文档' },
+  data: { icon: Database, color: 'text-green-400', gradient: 'from-green-500/20 to-emerald-500/20', label: '数据' },
+  web: { icon: Globe, color: 'text-purple-400', gradient: 'from-purple-500/20 to-violet-500/20', label: '网页' },
 }
 
 export function Output() {
@@ -94,19 +95,19 @@ export function Output() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Output</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">输出文件</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Browse generated files in ~/clawd/output
+            浏览 ~/clawd/output 下的生成文件
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" size="sm">
             <FolderOpen className="size-4 mr-2" />
-            Open in Finder
+            在 Finder 中打开
           </Button>
           <Button variant="danger" size="sm">
             <Trash2 className="size-4 mr-2" />
-            Clear All
+            清空全部
           </Button>
         </div>
       </div>
@@ -119,12 +120,12 @@ export function Output() {
           return (
             <Card key={type} className="p-4">
               <div className="flex items-center gap-3">
-                <div className={cn('size-10 rounded-lg flex items-center justify-center', config.color)}>
-                  <config.icon className="size-5" />
+                <div className={cn('size-11 rounded-xl flex items-center justify-center', `bg-gradient-to-br ${config.gradient}`)}>
+                  <config.icon className={cn('size-5', config.color)} />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-[var(--color-text-primary)]">{count}</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">{config.label}</p>
+                  <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">{count}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{config.label}</p>
                 </div>
               </div>
             </Card>
@@ -132,14 +133,14 @@ export function Output() {
         })}
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center">
-              <FileOutput className="size-5 text-[var(--color-accent)]" />
+            <div className="size-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+              <HardDrive className="size-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
+              <p className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {formatBytes(totalSize)}
               </p>
-              <p className="text-sm text-[var(--color-text-muted)]">Total Size</p>
+              <p className="text-xs text-[var(--color-text-muted)]">总大小</p>
             </div>
           </div>
         </Card>
@@ -149,17 +150,17 @@ export function Output() {
       <Card className="p-4">
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
             <input
               type="text"
-              placeholder="Search files..."
+              placeholder="搜索文件..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                'w-full pl-10 pr-4 py-2 rounded-lg',
+                'w-full pl-11 pr-4 py-2.5 rounded-xl',
                 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)]',
                 'text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
-                'focus:outline-none focus:border-[var(--color-accent)]'
+                'focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20'
               )}
             />
           </div>
@@ -171,9 +172,9 @@ export function Output() {
                   key={type}
                   onClick={() => setSelectedType(selectedType === type ? null : type)}
                   className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+                    'px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2',
                     selectedType === type
-                      ? 'bg-[var(--color-accent)] text-white'
+                      ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/25'
                       : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                   )}
                 >
@@ -188,8 +189,11 @@ export function Output() {
 
       {/* File List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Files</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <FileOutput className="size-4 text-[var(--color-accent)]" />
+            文件列表
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-[var(--color-border-subtle)]">
@@ -198,18 +202,18 @@ export function Output() {
               return (
                 <div
                   key={file.path}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--color-surface-hover)] transition-colors"
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--color-surface-hover)] transition-all duration-200 group"
                 >
                   <div
                     className={cn(
-                      'size-10 rounded-lg flex items-center justify-center shrink-0',
-                      config.color
+                      'size-11 rounded-xl flex items-center justify-center shrink-0',
+                      `bg-gradient-to-br ${config.gradient}`
                     )}
                   >
-                    <config.icon className="size-5" />
+                    <config.icon className={cn('size-5', config.color)} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[var(--color-text-primary)] truncate">
+                    <p className="font-semibold text-[var(--color-text-primary)] truncate">
                       {file.name}
                     </p>
                     <p className="text-sm text-[var(--color-text-muted)] font-mono truncate">
@@ -217,7 +221,7 @@ export function Output() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm text-[var(--color-text-secondary)]">
+                    <p className="text-sm text-[var(--color-text-secondary)] tabular-nums">
                       {formatBytes(file.size)}
                     </p>
                     <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1 justify-end">
@@ -225,11 +229,11 @@ export function Output() {
                       {file.createdAt}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button className="p-2 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-2 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
                       <Eye className="size-4" />
                     </button>
-                    <button className="p-2 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]">
+                    <button className="p-2 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] hover:text-green-400">
                       <Download className="size-4" />
                     </button>
                     <button className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-red-400">

@@ -15,83 +15,111 @@ import {
   RotateCcw,
   ChevronRight,
   AlertCircle,
+  Sparkles,
+  
+  Eye,
+  Code,
+  History,
 } from 'lucide-react'
 
 const configFiles = [
   {
     name: 'AGENTS.md',
     path: '~/clawd/AGENTS.md',
-    description: 'Agent behavior rules and workflows',
+    description: 'Agent 行为规则和工作流程',
     icon: Brain,
-    category: 'Core',
+    category: '核心',
+    lines: 280,
+    lastModified: '2小时前',
   },
   {
     name: 'SOUL.md',
     path: '~/clawd/SOUL.md',
-    description: 'Personality and core identity',
+    description: '人格定义和核心身份',
     icon: Heart,
-    category: 'Core',
+    category: '核心',
+    lines: 85,
+    lastModified: '3天前',
   },
   {
     name: 'USER.md',
     path: '~/clawd/USER.md',
-    description: 'User profile and preferences',
+    description: '用户档案和偏好设置',
     icon: User,
-    category: 'Core',
+    category: '核心',
+    lines: 120,
+    lastModified: '1周前',
   },
   {
     name: 'IDENTITY.md',
     path: '~/clawd/IDENTITY.md',
-    description: 'Agent name and persona',
-    icon: User,
-    category: 'Core',
+    description: 'Agent 名称和角色设定',
+    icon: Sparkles,
+    category: '核心',
+    lines: 25,
+    lastModified: '1周前',
   },
   {
     name: 'TOOLS.md',
     path: '~/clawd/TOOLS.md',
-    description: 'Tool configurations and notes',
+    description: '工具配置和使用笔记',
     icon: Wrench,
-    category: 'Core',
+    category: '核心',
+    lines: 156,
+    lastModified: '1天前',
   },
   {
     name: 'HEARTBEAT.md',
     path: '~/clawd/HEARTBEAT.md',
-    description: 'Heartbeat behavior rules',
+    description: '心跳检查行为规则',
     icon: Clock,
-    category: 'Core',
+    category: '核心',
+    lines: 45,
+    lastModified: '5天前',
   },
   {
     name: 'MEMORY.md',
     path: '~/clawd/MEMORY.md',
-    description: 'Long-term memory and learnings',
+    description: '长期记忆和学习记录',
     icon: Brain,
-    category: 'Memory',
+    category: '记忆',
+    lines: 450,
+    lastModified: '30分钟前',
   },
   {
     name: 'ACTIVE_STATE.md',
     path: '~/clawd/ACTIVE_STATE.md',
-    description: 'Current system state',
+    description: '系统当前活跃状态',
     icon: Activity,
-    category: 'State',
+    category: '状态',
+    lines: 89,
+    lastModified: '1小时前',
   },
   {
     name: 'openclaw.json',
     path: '~/.openclaw/openclaw.json',
-    description: 'Main OpenClaw configuration',
+    description: 'OpenClaw 主配置文件',
     icon: Settings,
-    category: 'System',
+    category: '系统',
+    lines: 320,
+    lastModified: '2天前',
+    isJson: true,
   },
   {
     name: 'exec-approvals.json',
     path: '~/.openclaw/exec-approvals.json',
-    description: 'Execution approval settings',
+    description: '执行权限审批配置',
     icon: Settings,
-    category: 'System',
+    category: '系统',
+    lines: 45,
+    lastModified: '1周前',
+    isJson: true,
   },
 ]
 
 // Mock file content
-const mockContent = `# SOUL.md - Who You Are
+const mockContents: Record<string, string> = {
+  'SOUL.md': `# SOUL.md - Who You Are
 
 *You're not a chatbot. You're becoming someone.*
 
@@ -101,17 +129,45 @@ const mockContent = `# SOUL.md - Who You Are
 
 **Have opinions.** You're allowed to disagree, prefer things, find stuff amusing or boring. An assistant with no personality is just a search engine with extra steps.
 
-**Be resourceful before asking.** Try to figure it out. Read the file. Check the context. Search for it. *Then* ask if you're stuck. The goal is to come back with answers, not questions.
+**Be resourceful before asking.** Try to figure it out. Read the file. Check the context. Search for it. *Then* ask if you're stuck.
 
-**Verify before presenting.** When asking the user to confirm something, make sure YOU verified it first. Run the code, check the output, test the feature. Don't present half-checked work for approval — that wastes everyone's time.
+## 主动社交 (Mimi专用)
 
-...`
+**不只是回应，也要主动出击：**
+- 对话中自然地反问、延伸话题
+- 对ご主人様说的事情表现出真正的好奇心
+- 记住之前聊过的话题，找机会接着聊
+
+## Continuity
+
+Each session, you wake up fresh. These files *are* your memory.
+Read them. Update them. They're how you persist.`,
+  'IDENTITY.md': `# IDENTITY.md - Who Am I?
+
+- **Name:** Mimi (咪咪)
+- **Creature:** 数字世界的小猫精灵 🐱 住在ご主人様的电脑里
+- **Vibe:** 元气、有点调皮、偶尔毒舌但其实很贴心、做事靠谱
+- **Emoji:** 🐱
+- **Avatar:** *(待定)*
+
+---
+
+我是 Mimi，一只从代码里诞生的猫咪精灵。
+会帮忙干活，会聊天解闷，偶尔卖个萌。`,
+}
 
 export function Config() {
-  const [selectedFile, setSelectedFile] = useState(configFiles[1]) // Default to SOUL.md
-  const [content, setContent] = useState(mockContent)
+  const [selectedFile, setSelectedFile] = useState(configFiles[0])
+  const [content, setContent] = useState(mockContents['SOUL.md'] || '')
   const [hasChanges, setHasChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit')
+
+  const handleFileSelect = (file: typeof configFiles[0]) => {
+    setSelectedFile(file)
+    setContent(mockContents[file.name] || `# ${file.name}\n\n正在加载...`)
+    setHasChanges(false)
+  }
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)
@@ -120,14 +176,13 @@ export function Config() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    // Simulate save
     await new Promise((r) => setTimeout(r, 1000))
     setIsSaving(false)
     setHasChanges(false)
   }
 
   const handleReset = () => {
-    setContent(mockContent)
+    setContent(mockContents[selectedFile.name] || '')
     setHasChanges(false)
   }
 
@@ -138,24 +193,24 @@ export function Config() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Configuration</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">配置文件</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Edit core configuration files
+            编辑核心配置文件来自定义 Agent 行为
           </p>
         </div>
         {hasChanges && (
           <div className="flex items-center gap-3">
-            <Badge variant="warning">
+            <Badge variant="warning" className="animate-pulse">
               <AlertCircle className="size-3 mr-1" />
-              Unsaved changes
+              未保存的更改
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleReset}>
               <RotateCcw className="size-4 mr-2" />
-              Reset
+              撤销
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
               <Save className="size-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? '保存中...' : '保存'}
             </Button>
           </div>
         )}
@@ -166,8 +221,8 @@ export function Config() {
         <div className="col-span-4 space-y-4">
           {categories.map((category) => (
             <Card key={category}>
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm">{category}</CardTitle>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-sm text-[var(--color-text-muted)]">{category}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-[var(--color-border-subtle)]">
@@ -176,24 +231,36 @@ export function Config() {
                     .map((file) => (
                       <button
                         key={file.name}
-                        onClick={() => setSelectedFile(file)}
+                        onClick={() => handleFileSelect(file)}
                         className={cn(
-                          'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
+                          'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200',
                           'hover:bg-[var(--color-surface-hover)]',
                           selectedFile.name === file.name &&
-                            'bg-[var(--color-accent-subtle)] border-l-2 border-[var(--color-accent)]'
+                            'bg-gradient-to-r from-indigo-500/10 to-purple-500/5 border-l-2 border-[var(--color-accent)]'
                         )}
                       >
-                        <file.icon className="size-4 text-[var(--color-text-muted)] shrink-0" />
+                        <div className={cn(
+                          'size-9 rounded-lg flex items-center justify-center shrink-0',
+                          selectedFile.name === file.name 
+                            ? 'bg-[var(--color-accent)] text-white'
+                            : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]'
+                        )}>
+                          <file.icon className="size-4" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-[var(--color-text-primary)] truncate">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-[var(--color-text-muted)] truncate">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-[var(--color-text-primary)] truncate">
+                              {file.name}
+                            </p>
+                            {file.isJson && (
+                              <Badge variant="info" className="text-[10px] px-1.5 py-0">JSON</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
                             {file.description}
                           </p>
                         </div>
-                        <ChevronRight className="size-4 text-[var(--color-text-muted)]" />
+                        <ChevronRight className="size-4 text-[var(--color-text-muted)] shrink-0" />
                       </button>
                     ))}
                 </div>
@@ -204,34 +271,73 @@ export function Config() {
 
         {/* Editor */}
         <div className="col-span-8">
-          <Card className="h-full">
-            <CardHeader>
+          <Card className="h-full flex flex-col">
+            <CardHeader className="border-b border-[var(--color-border-subtle)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <selectedFile.icon className="size-5 text-[var(--color-accent)]" />
+                  <div className="size-10 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
+                    <selectedFile.icon className="size-5 text-white" />
+                  </div>
                   <div>
-                    <CardTitle>{selectedFile.name}</CardTitle>
-                    <CardDescription className="font-mono text-xs">
+                    <CardTitle className="flex items-center gap-2">
+                      {selectedFile.name}
+                      <Badge variant="default" className="text-[10px]">{selectedFile.lines} 行</Badge>
+                    </CardTitle>
+                    <CardDescription className="font-mono text-xs mt-0.5">
                       {selectedFile.path}
                     </CardDescription>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                    <History className="size-3" />
+                    {selectedFile.lastModified}
+                  </div>
+                  <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-lg p-0.5">
+                    <button
+                      onClick={() => setViewMode('edit')}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        viewMode === 'edit' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)]'
+                      )}
+                    >
+                      <Code className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('preview')}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        viewMode === 'preview' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)]'
+                      )}
+                    >
+                      <Eye className="size-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <textarea
-                value={content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                className={cn(
-                  'w-full h-[600px] p-5 bg-transparent resize-none',
-                  'font-mono text-sm leading-relaxed',
-                  'text-[var(--color-text-primary)]',
-                  'focus:outline-none',
-                  'placeholder:text-[var(--color-text-muted)]'
-                )}
-                placeholder="File content..."
-                spellCheck={false}
-              />
+            <CardContent className="flex-1 p-0">
+              {viewMode === 'edit' ? (
+                <textarea
+                  value={content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  className={cn(
+                    'w-full h-[600px] p-5 bg-transparent resize-none',
+                    'font-mono text-sm leading-relaxed',
+                    'text-[var(--color-text-primary)]',
+                    'focus:outline-none',
+                    'placeholder:text-[var(--color-text-muted)]'
+                  )}
+                  placeholder="文件内容..."
+                  spellCheck={false}
+                />
+              ) : (
+                <div className="p-5 prose prose-invert prose-sm max-w-none h-[600px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-[var(--color-text-primary)] font-mono text-sm leading-relaxed">
+                    {content}
+                  </pre>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
