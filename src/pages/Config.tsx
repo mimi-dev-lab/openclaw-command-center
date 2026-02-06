@@ -8,7 +8,7 @@ import {
   Heart,
   Brain,
   Wrench,
-  Clock,
+  
   Activity,
   Settings,
   Save,
@@ -16,17 +16,17 @@ import {
   ChevronRight,
   AlertCircle,
   Sparkles,
-  
   Eye,
   Code,
   History,
+  ChevronDown,
 } from 'lucide-react'
 
 const configFiles = [
   {
     name: 'AGENTS.md',
     path: '~/clawd/AGENTS.md',
-    description: 'Agent 行为规则和工作流程',
+    description: 'Agent 行为规则',
     icon: Brain,
     category: '核心',
     lines: 280,
@@ -35,7 +35,7 @@ const configFiles = [
   {
     name: 'SOUL.md',
     path: '~/clawd/SOUL.md',
-    description: '人格定义和核心身份',
+    description: '人格定义',
     icon: Heart,
     category: '核心',
     lines: 85,
@@ -44,7 +44,7 @@ const configFiles = [
   {
     name: 'USER.md',
     path: '~/clawd/USER.md',
-    description: '用户档案和偏好设置',
+    description: '用户档案',
     icon: User,
     category: '核心',
     lines: 120,
@@ -53,7 +53,7 @@ const configFiles = [
   {
     name: 'IDENTITY.md',
     path: '~/clawd/IDENTITY.md',
-    description: 'Agent 名称和角色设定',
+    description: 'Agent 名称',
     icon: Sparkles,
     category: '核心',
     lines: 25,
@@ -62,25 +62,16 @@ const configFiles = [
   {
     name: 'TOOLS.md',
     path: '~/clawd/TOOLS.md',
-    description: '工具配置和使用笔记',
+    description: '工具配置',
     icon: Wrench,
     category: '核心',
     lines: 156,
     lastModified: '1天前',
   },
   {
-    name: 'HEARTBEAT.md',
-    path: '~/clawd/HEARTBEAT.md',
-    description: '心跳检查行为规则',
-    icon: Clock,
-    category: '核心',
-    lines: 45,
-    lastModified: '5天前',
-  },
-  {
     name: 'MEMORY.md',
     path: '~/clawd/MEMORY.md',
-    description: '长期记忆和学习记录',
+    description: '长期记忆',
     icon: Brain,
     category: '记忆',
     lines: 450,
@@ -89,7 +80,7 @@ const configFiles = [
   {
     name: 'ACTIVE_STATE.md',
     path: '~/clawd/ACTIVE_STATE.md',
-    description: '系统当前活跃状态',
+    description: '系统状态',
     icon: Activity,
     category: '状态',
     lines: 89,
@@ -98,26 +89,15 @@ const configFiles = [
   {
     name: 'openclaw.json',
     path: '~/.openclaw/openclaw.json',
-    description: 'OpenClaw 主配置文件',
+    description: '主配置文件',
     icon: Settings,
     category: '系统',
     lines: 320,
     lastModified: '2天前',
     isJson: true,
   },
-  {
-    name: 'exec-approvals.json',
-    path: '~/.openclaw/exec-approvals.json',
-    description: '执行权限审批配置',
-    icon: Settings,
-    category: '系统',
-    lines: 45,
-    lastModified: '1周前',
-    isJson: true,
-  },
 ]
 
-// Mock file content
 const mockContents: Record<string, string> = {
   'SOUL.md': `# SOUL.md - Who You Are
 
@@ -125,35 +105,21 @@ const mockContents: Record<string, string> = {
 
 ## Core Truths
 
-**Be genuinely helpful, not performatively helpful.** Skip the "Great question!" and "I'd be happy to help!" — just help. Actions speak louder than filler words.
+**Be genuinely helpful, not performatively helpful.**
 
-**Have opinions.** You're allowed to disagree, prefer things, find stuff amusing or boring. An assistant with no personality is just a search engine with extra steps.
+**Have opinions.** You're allowed to disagree.
 
-**Be resourceful before asking.** Try to figure it out. Read the file. Check the context. Search for it. *Then* ask if you're stuck.
+**Be resourceful before asking.**
 
 ## 主动社交 (Mimi专用)
 
-**不只是回应，也要主动出击：**
-- 对话中自然地反问、延伸话题
-- 对ご主人様说的事情表现出真正的好奇心
-- 记住之前聊过的话题，找机会接着聊
-
-## Continuity
-
-Each session, you wake up fresh. These files *are* your memory.
-Read them. Update them. They're how you persist.`,
+**不只是回应，也要主动出击**`,
   'IDENTITY.md': `# IDENTITY.md - Who Am I?
 
 - **Name:** Mimi (咪咪)
-- **Creature:** 数字世界的小猫精灵 🐱 住在ご主人様的电脑里
-- **Vibe:** 元气、有点调皮、偶尔毒舌但其实很贴心、做事靠谱
-- **Emoji:** 🐱
-- **Avatar:** *(待定)*
-
----
-
-我是 Mimi，一只从代码里诞生的猫咪精灵。
-会帮忙干活，会聊天解闷，偶尔卖个萌。`,
+- **Creature:** 数字世界的小猫精灵 🐱
+- **Vibe:** 元气、有点调皮、做事靠谱
+- **Emoji:** 🐱`,
 }
 
 export function Config() {
@@ -162,16 +128,13 @@ export function Config() {
   const [hasChanges, setHasChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit')
+  const [showFileList, setShowFileList] = useState(false)
 
   const handleFileSelect = (file: typeof configFiles[0]) => {
     setSelectedFile(file)
     setContent(mockContents[file.name] || `# ${file.name}\n\n正在加载...`)
     setHasChanges(false)
-  }
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    setHasChanges(true)
+    setShowFileList(false)
   }
 
   const handleSave = async () => {
@@ -181,44 +144,81 @@ export function Config() {
     setHasChanges(false)
   }
 
-  const handleReset = () => {
-    setContent(mockContents[selectedFile.name] || '')
-    setHasChanges(false)
-  }
-
   const categories = [...new Set(configFiles.map((f) => f.category))]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">配置文件</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            编辑核心配置文件来自定义 Agent 行为
-          </p>
+          <h1 className="text-xl lg:text-2xl font-bold text-[var(--color-text-primary)]">配置文件</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">编辑核心配置</p>
         </div>
         {hasChanges && (
-          <div className="flex items-center gap-3">
-            <Badge variant="warning" className="animate-pulse">
+          <div className="flex items-center gap-2">
+            <Badge variant="warning" className="animate-pulse text-xs">
               <AlertCircle className="size-3 mr-1" />
-              未保存的更改
+              未保存
             </Badge>
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              <RotateCcw className="size-4 mr-2" />
-              撤销
+            <Button variant="ghost" size="sm" onClick={() => setContent(mockContents[selectedFile.name] || '')}>
+              <RotateCcw className="size-4" />
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
-              <Save className="size-4 mr-2" />
-              {isSaving ? '保存中...' : '保存'}
+              <Save className="size-4 mr-1" />
+              {isSaving ? '...' : '保存'}
             </Button>
           </div>
         )}
       </div>
 
+      {/* Mobile File Selector */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setShowFileList(!showFileList)}
+          className="w-full flex items-center justify-between p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
+              <selectedFile.icon className="size-4 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="font-medium text-[var(--color-text-primary)]">{selectedFile.name}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">{selectedFile.description}</p>
+            </div>
+          </div>
+          <ChevronDown className={cn("size-5 text-[var(--color-text-muted)] transition-transform", showFileList && "rotate-180")} />
+        </button>
+        
+        {showFileList && (
+          <Card className="mt-2">
+            <CardContent className="p-0">
+              <div className="max-h-64 overflow-y-auto divide-y divide-[var(--color-border-subtle)]">
+                {configFiles.map((file) => (
+                  <button
+                    key={file.name}
+                    onClick={() => handleFileSelect(file)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-4 py-3 text-left',
+                      selectedFile.name === file.name && 'bg-[var(--color-accent-subtle)]'
+                    )}
+                  >
+                    <file.icon className="size-4 text-[var(--color-text-muted)]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-[var(--color-text-primary)]">{file.name}</p>
+                      <p className="text-xs text-[var(--color-text-muted)]">{file.description}</p>
+                    </div>
+                    {file.isJson && <Badge variant="info" className="text-[10px]">JSON</Badge>}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-        {/* File List */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* Desktop File List */}
+        <div className="hidden lg:block lg:col-span-4 space-y-4">
           {categories.map((category) => (
             <Card key={category}>
               <CardHeader className="py-3 px-4">
@@ -233,14 +233,14 @@ export function Config() {
                         key={file.name}
                         onClick={() => handleFileSelect(file)}
                         className={cn(
-                          'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200',
+                          'w-full flex items-center gap-3 px-4 py-3 text-left transition-all',
                           'hover:bg-[var(--color-surface-hover)]',
                           selectedFile.name === file.name &&
                             'bg-gradient-to-r from-indigo-500/10 to-purple-500/5 border-l-2 border-[var(--color-accent)]'
                         )}
                       >
                         <div className={cn(
-                          'size-9 rounded-lg flex items-center justify-center shrink-0',
+                          'size-8 rounded-lg flex items-center justify-center shrink-0',
                           selectedFile.name === file.name 
                             ? 'bg-[var(--color-accent)] text-white'
                             : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]'
@@ -249,16 +249,12 @@ export function Config() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="font-medium text-[var(--color-text-primary)] truncate">
+                            <p className="font-medium text-sm text-[var(--color-text-primary)] truncate">
                               {file.name}
                             </p>
-                            {file.isJson && (
-                              <Badge variant="info" className="text-[10px] px-1.5 py-0">JSON</Badge>
-                            )}
+                            {file.isJson && <Badge variant="info" className="text-[10px]">JSON</Badge>}
                           </div>
-                          <p className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
-                            {file.description}
-                          </p>
+                          <p className="text-xs text-[var(--color-text-muted)] truncate">{file.description}</p>
                         </div>
                         <ChevronRight className="size-4 text-[var(--color-text-muted)] shrink-0" />
                       </button>
@@ -271,33 +267,28 @@ export function Config() {
 
         {/* Editor */}
         <div className="lg:col-span-8">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="border-b border-[var(--color-border-subtle)]">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
-                    <selectedFile.icon className="size-5 text-white" />
+          <Card className="flex flex-col">
+            <CardHeader className="border-b border-[var(--color-border-subtle)] p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="size-9 rounded-lg bg-[var(--color-accent)] flex items-center justify-center">
+                    <selectedFile.icon className="size-4 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {selectedFile.name}
-                      <Badge variant="default" className="text-[10px]">{selectedFile.lines} 行</Badge>
-                    </CardTitle>
-                    <CardDescription className="font-mono text-xs mt-0.5">
-                      {selectedFile.path}
-                    </CardDescription>
+                    <CardTitle className="text-sm">{selectedFile.name}</CardTitle>
+                    <CardDescription className="font-mono text-xs">{selectedFile.path}</CardDescription>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="hidden sm:flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                     <History className="size-3" />
                     {selectedFile.lastModified}
-                  </div>
+                  </span>
                   <div className="flex items-center bg-[var(--color-surface-elevated)] rounded-lg p-0.5">
                     <button
                       onClick={() => setViewMode('edit')}
                       className={cn(
-                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        'px-2.5 py-1.5 rounded-md text-sm transition-colors',
                         viewMode === 'edit' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)]'
                       )}
                     >
@@ -306,7 +297,7 @@ export function Config() {
                     <button
                       onClick={() => setViewMode('preview')}
                       className={cn(
-                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        'px-2.5 py-1.5 rounded-md text-sm transition-colors',
                         viewMode === 'preview' ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)]'
                       )}
                     >
@@ -317,27 +308,18 @@ export function Config() {
               </div>
             </CardHeader>
             <CardContent className="flex-1 p-0">
-              {viewMode === 'edit' ? (
-                <textarea
-                  value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  className={cn(
-                    'w-full h-[600px] p-5 bg-transparent resize-none',
-                    'font-mono text-sm leading-relaxed',
-                    'text-[var(--color-text-primary)]',
-                    'focus:outline-none',
-                    'placeholder:text-[var(--color-text-muted)]'
-                  )}
-                  placeholder="文件内容..."
-                  spellCheck={false}
-                />
-              ) : (
-                <div className="p-5 prose prose-invert prose-sm max-w-none h-[600px] overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-[var(--color-text-primary)] font-mono text-sm leading-relaxed">
-                    {content}
-                  </pre>
-                </div>
-              )}
+              <textarea
+                value={content}
+                onChange={(e) => { setContent(e.target.value); setHasChanges(true); }}
+                className={cn(
+                  'w-full min-h-[400px] lg:min-h-[500px] p-4 bg-transparent resize-none',
+                  'font-mono text-sm leading-relaxed',
+                  'text-[var(--color-text-primary)]',
+                  'focus:outline-none'
+                )}
+                placeholder="文件内容..."
+                spellCheck={false}
+              />
             </CardContent>
           </Card>
         </div>
