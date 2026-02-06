@@ -21,7 +21,7 @@ import {
 import { useState, useEffect } from 'react'
 import { formatDuration, formatBytes } from '@/lib/utils'
 
-// Mock data - will be replaced with real API calls
+// Mock data
 const mockData = {
   status: 'running' as const,
   uptime: 86400000 * 3 + 3600000 * 5 + 60000 * 42,
@@ -42,16 +42,14 @@ const mockData = {
     { name: 'Telegram', emoji: '✈️', status: 'connected' as const, messagesIn: 340, messagesOut: 280 },
   ],
   recentActivity: [
-    { type: 'message', icon: Send, message: '回复了 #mimibot 频道', time: '2分钟前', color: 'text-blue-400' },
-    { type: 'cron', icon: Clock, message: 'Heartbeat 执行成功', time: '5分钟前', color: 'text-green-400' },
-    { type: 'memory', icon: Brain, message: '更新了 memory/2026-02-07.md', time: '1小时前', color: 'text-purple-400' },
-    { type: 'skill', icon: Zap, message: '调用了 image-generation skill', time: '2小时前', color: 'text-yellow-400' },
+    { type: 'message', icon: Send, message: '回复了 #mimibot', time: '2分钟前', color: 'text-blue-400' },
+    { type: 'cron', icon: Clock, message: 'Heartbeat 成功', time: '5分钟前', color: 'text-green-400' },
+    { type: 'memory', icon: Brain, message: '更新了记忆', time: '1小时前', color: 'text-purple-400' },
   ],
   topSkills: [
     { name: 'github', uses: 234, trend: 12 },
-    { name: 'image-generation', uses: 189, trend: 28 },
+    { name: 'image-gen', uses: 189, trend: 28 },
     { name: 'gog', uses: 156, trend: -5 },
-    { name: 'gemini-subagent', uses: 98, trend: 45 },
   ],
 }
 
@@ -79,19 +77,19 @@ export function Dashboard() {
   const memoryPercent = Math.round((data.memory.used / data.memory.total) * 100)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">仪表盘</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            系统概览与实时状态监控
+          <h1 className="text-xl lg:text-2xl font-bold text-[var(--color-text-primary)]">仪表盘</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+            系统概览与实时状态
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
             <Sparkles className="size-4 text-[var(--color-accent)]" />
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">{data.model}</span>
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">{data.model}</span>
           </div>
           <Button
             variant="secondary"
@@ -99,167 +97,160 @@ export function Dashboard() {
             onClick={handleRefresh}
             disabled={isRefreshing}
           >
-            <RefreshCw className={`size-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            刷新
+            <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline ml-2">刷新</span>
           </Button>
         </div>
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-5 gap-4">
-        {/* Uptime Card - Special */}
-        <Card className="col-span-1 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="size-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                <Clock className="size-5 text-green-400" />
+      {/* Main Stats - Scrollable on mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
+        {/* Uptime */}
+        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                <Clock className="size-4 lg:size-5 text-green-400" />
               </div>
-              <Badge variant="success">运行中</Badge>
+              <Badge variant="success" className="text-[10px] lg:text-xs">运行中</Badge>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {formatDuration(data.uptime)}
             </p>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">已运行时间</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">运行时间</p>
           </CardContent>
         </Card>
 
         {/* Memory */}
-        <Card className="col-span-1">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <HardDrive className="size-5 text-blue-400" />
+        <Card>
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <HardDrive className="size-4 lg:size-5 text-blue-400" />
               </div>
-              <span className="text-sm font-medium text-[var(--color-text-muted)]">{memoryPercent}%</span>
+              <span className="text-xs font-medium text-[var(--color-text-muted)]">{memoryPercent}%</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)]">
               {formatBytes(data.memory.used)}
             </p>
-            <div className="mt-2 h-1.5 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
+            <div className="mt-1.5 h-1 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all"
+                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
                 style={{ width: `${memoryPercent}%` }}
               />
             </div>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1.5">/ {formatBytes(data.memory.total)}</p>
           </CardContent>
         </Card>
 
         {/* CPU */}
-        <Card className="col-span-1">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="size-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <Cpu className="size-5 text-orange-400" />
+        <Card>
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <Cpu className="size-4 lg:size-5 text-orange-400" />
               </div>
-              <span className={`text-sm font-medium ${data.cpu > 80 ? 'text-red-400' : 'text-[var(--color-text-muted)]'}`}>
-                {data.cpu > 80 ? '⚠️' : ''}
-              </span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {Math.round(data.cpu)}%
             </p>
-            <div className="mt-2 h-1.5 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
+            <div className="mt-1.5 h-1 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all ${
-                  data.cpu > 80 ? 'bg-red-500' : data.cpu > 50 ? 'bg-orange-500' : 'bg-green-500'
-                }`}
+                className={`h-full rounded-full ${data.cpu > 80 ? 'bg-red-500' : 'bg-green-500'}`}
                 style={{ width: `${data.cpu}%` }}
               />
             </div>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1.5">CPU 使用率</p>
           </CardContent>
         </Card>
 
-        {/* Today Messages */}
-        <Card className="col-span-1">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="size-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                <MessageSquare className="size-5 text-purple-400" />
+        {/* Messages */}
+        <Card>
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <MessageSquare className="size-4 lg:size-5 text-purple-400" />
               </div>
-              <div className="flex items-center gap-1 text-green-400">
+              <div className="flex items-center gap-0.5 text-green-400 text-xs">
                 <ArrowUpRight className="size-3" />
-                <span className="text-xs font-medium">+23%</span>
+                +23%
               </div>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {data.todayMessages}
             </p>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1.5">今日消息</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">今日消息</p>
           </CardContent>
         </Card>
 
         {/* Tokens */}
-        <Card className="col-span-1">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="size-10 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
-                <Terminal className="size-5 text-[var(--color-accent)]" />
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
+                <Terminal className="size-4 lg:size-5 text-[var(--color-accent)]" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)]">
               {data.tokensUsed}
             </p>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1.5">Tokens 使用量</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Tokens</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Resource Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4 hover:border-[var(--color-accent)] transition-colors cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
-              <Zap className="size-6 text-indigo-400" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <Card className="p-3 lg:p-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+              <Zap className="size-5 lg:size-6 text-indigo-400" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.skills}</p>
-              <p className="text-sm text-[var(--color-text-muted)]">已安装技能</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.skills}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">技能</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 hover:border-[var(--color-accent)] transition-colors cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-              <FolderOpen className="size-6 text-blue-400" />
+        <Card className="p-3 lg:p-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+              <FolderOpen className="size-5 lg:size-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.projects}</p>
-              <p className="text-sm text-[var(--color-text-muted)]">本地项目</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.projects}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">项目</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 hover:border-[var(--color-accent)] transition-colors cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 flex items-center justify-center">
-              <Brain className="size-6 text-pink-400" />
+        <Card className="p-3 lg:p-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 flex items-center justify-center">
+              <Brain className="size-5 lg:size-6 text-pink-400" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.memoryFiles}</p>
-              <p className="text-sm text-[var(--color-text-muted)]">记忆文件</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.memoryFiles}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">记忆</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 hover:border-[var(--color-accent)] transition-colors cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-              <Clock className="size-6 text-amber-400" />
+        <Card className="p-3 lg:p-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+              <Clock className="size-5 lg:size-6 text-amber-400" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.cronJobs}</p>
-              <p className="text-sm text-[var(--color-text-muted)]">定时任务</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.cronJobs}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">定时任务</p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Three Column Layout */}
-      <div className="grid grid-cols-3 gap-6">
+      {/* Three Column Layout - Stack on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Channel Status */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
               <Activity className="size-4 text-[var(--color-accent)]" />
               通道状态
             </CardTitle>
@@ -267,26 +258,26 @@ export function Dashboard() {
           <CardContent className="p-0">
             <div className="divide-y divide-[var(--color-border-subtle)]">
               {data.channels.map((channel) => (
-                <div key={channel.name} className="px-5 py-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={channel.name} className="px-4 lg:px-5 py-3">
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{channel.emoji}</span>
-                      <span className="font-medium text-[var(--color-text-primary)]">{channel.name}</span>
+                      <span>{channel.emoji}</span>
+                      <span className="font-medium text-sm text-[var(--color-text-primary)]">{channel.name}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="size-2 rounded-full bg-green-400 animate-pulse" />
                       <span className="text-xs text-green-400">在线</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
+                    <span className="flex items-center gap-1">
                       <ArrowDownRight className="size-3 text-blue-400" />
-                      <span>{channel.messagesIn} 接收</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+                      {channel.messagesIn}
+                    </span>
+                    <span className="flex items-center gap-1">
                       <ArrowUpRight className="size-3 text-green-400" />
-                      <span>{channel.messagesOut} 发送</span>
-                    </div>
+                      {channel.messagesOut}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -296,8 +287,8 @@ export function Dashboard() {
 
         {/* Recent Activity */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="size-4 text-[var(--color-accent)]" />
               最近活动
             </CardTitle>
@@ -305,9 +296,9 @@ export function Dashboard() {
           <CardContent className="p-0">
             <div className="divide-y divide-[var(--color-border-subtle)]">
               {data.recentActivity.map((activity, i) => (
-                <div key={i} className="flex items-center gap-3 px-5 py-3">
-                  <div className={`size-8 rounded-lg bg-[var(--color-surface-elevated)] flex items-center justify-center ${activity.color}`}>
-                    <activity.icon className="size-4" />
+                <div key={i} className="flex items-center gap-3 px-4 lg:px-5 py-3">
+                  <div className={`size-7 lg:size-8 rounded-lg bg-[var(--color-surface-elevated)] flex items-center justify-center ${activity.color}`}>
+                    <activity.icon className="size-3.5 lg:size-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-[var(--color-text-primary)] truncate">{activity.message}</p>
@@ -321,8 +312,8 @@ export function Dashboard() {
 
         {/* Top Skills */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
               <Zap className="size-4 text-[var(--color-accent)]" />
               热门技能
             </CardTitle>
@@ -330,13 +321,13 @@ export function Dashboard() {
           <CardContent className="p-0">
             <div className="divide-y divide-[var(--color-border-subtle)]">
               {data.topSkills.map((skill, i) => (
-                <div key={skill.name} className="flex items-center gap-3 px-5 py-3">
-                  <span className="text-sm font-medium text-[var(--color-text-muted)] w-5">{i + 1}</span>
+                <div key={skill.name} className="flex items-center gap-3 px-4 lg:px-5 py-3">
+                  <span className="text-sm font-medium text-[var(--color-text-muted)] w-4">{i + 1}</span>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">{skill.name}</p>
-                    <p className="text-xs text-[var(--color-text-muted)]">{skill.uses} 次调用</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{skill.uses} 次</p>
                   </div>
-                  <div className={`flex items-center gap-1 text-xs font-medium ${skill.trend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`flex items-center gap-0.5 text-xs font-medium ${skill.trend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {skill.trend >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                     {Math.abs(skill.trend)}%
                   </div>
@@ -347,49 +338,21 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* System Info */}
+      {/* Quick Actions - Mobile friendly */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>系统信息</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
-                <Play className="size-4 mr-2" />
-                运行 Heartbeat
-              </Button>
-              <Button variant="secondary" size="sm">
-                <RefreshCw className="size-4 mr-2" />
-                重启 Gateway
-              </Button>
-            </div>
-          </div>
+        <CardHeader className="pb-2 lg:pb-3">
+          <CardTitle className="text-sm">快捷操作</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-6 gap-6">
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">版本</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1">v{data.version}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Node.js</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1">{data.nodeVersion}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">平台</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1">Darwin arm64</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">默认模型</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1">{data.model}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">工作目录</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1 font-mono text-sm">~/clawd</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">活跃会话</p>
-              <p className="font-semibold text-[var(--color-text-primary)] mt-1">{data.sessions} 个</p>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" className="flex-1 sm:flex-none">
+              <Play className="size-4 mr-1.5" />
+              Heartbeat
+            </Button>
+            <Button variant="secondary" size="sm" className="flex-1 sm:flex-none">
+              <RefreshCw className="size-4 mr-1.5" />
+              重启 Gateway
+            </Button>
           </div>
         </CardContent>
       </Card>

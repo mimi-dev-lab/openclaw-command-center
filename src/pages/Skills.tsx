@@ -161,7 +161,7 @@ export function Skills() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-4">
             <div className="size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
@@ -208,9 +208,9 @@ export function Skills() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Categories */}
-        <div className="col-span-3">
+        <div className="lg:col-span-3">
           <Card>
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm text-[var(--color-text-muted)]">分类</CardTitle>
@@ -250,7 +250,7 @@ export function Skills() {
         </div>
 
         {/* Skill List */}
-        <div className="col-span-9 space-y-4">
+        <div className="lg:col-span-9 space-y-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />

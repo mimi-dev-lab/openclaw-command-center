@@ -123,7 +123,7 @@ export function Prompts() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {categories.map((category) => {
           const config = categoryConfig[category]
           const count = prompts.filter((p) => p.category === category).length

@@ -29,6 +29,15 @@
   --spacing-sidebar: 260px;
 }
 
+/* Safe area for mobile */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 * {
   box-sizing: border-box;
 }

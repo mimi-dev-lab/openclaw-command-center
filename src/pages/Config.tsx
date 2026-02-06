@@ -216,9 +216,9 @@ export function Config() {
         )}
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
         {/* File List */}
-        <div className="col-span-4 space-y-4">
+        <div className="lg:col-span-4 space-y-4">
           {categories.map((category) => (
             <Card key={category}>
               <CardHeader className="py-3 px-4">
@@ -270,7 +270,7 @@ export function Config() {
         </div>
 
         {/* Editor */}
-        <div className="col-span-8">
+        <div className="lg:col-span-8">
           <Card className="h-full flex flex-col">
             <CardHeader className="border-b border-[var(--color-border-subtle)]">
               <div className="flex items-center justify-between">

@@ -15,21 +15,25 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: '仪表盘', description: '系统概览' },
-  { to: '/config', icon: FileText, label: '配置文件', description: '核心配置' },
-  { to: '/memory', icon: Brain, label: '记忆系统', description: 'Memory' },
-  { to: '/prompts', icon: Sparkles, label: '提示词', description: 'Prompts' },
-  { to: '/skills', icon: Zap, label: '技能库', description: 'Skills' },
-  { to: '/projects', icon: FolderOpen, label: '项目', description: 'Projects' },
-  { to: '/output', icon: FileOutput, label: '输出文件', description: 'Output' },
-  { to: '/cron', icon: Clock, label: '定时任务', description: 'Cron' },
-  { to: '/sessions', icon: MessageSquare, label: '会话', description: 'Sessions' },
-  { to: '/settings', icon: Settings, label: '设置', description: 'Settings' },
+  { to: '/', icon: LayoutDashboard, label: '仪表盘' },
+  { to: '/config', icon: FileText, label: '配置文件' },
+  { to: '/memory', icon: Brain, label: '记忆系统' },
+  { to: '/prompts', icon: Sparkles, label: '提示词' },
+  { to: '/skills', icon: Zap, label: '技能库' },
+  { to: '/projects', icon: FolderOpen, label: '项目' },
+  { to: '/output', icon: FileOutput, label: '输出文件' },
+  { to: '/cron', icon: Clock, label: '定时任务' },
+  { to: '/sessions', icon: MessageSquare, label: '会话' },
+  { to: '/settings', icon: Settings, label: '设置' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col">
+    <aside className="fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] bg-[var(--color-surface)] border-r border-[var(--color-border)] flex flex-col z-50">
       {/* Logo */}
       <div className="p-5 border-b border-[var(--color-border-subtle)]">
         <div className="flex items-center gap-3">
@@ -52,6 +56,7 @@ export function Sidebar() {
             <li key={item.to}>
               <NavLink
                 to={item.to}
+                onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
                     'group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
@@ -85,7 +90,7 @@ export function Sidebar() {
           <div className="size-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
           <div>
             <span className="text-sm font-medium text-green-400">Gateway 运行中</span>
-            <p className="text-xs text-[var(--color-text-muted)]">v1.2.0 • 3天5小时</p>
+            <p className="text-xs text-[var(--color-text-muted)]">v1.2.0</p>
           </div>
         </div>
       </div>
