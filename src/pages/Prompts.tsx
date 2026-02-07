@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { useGatewayStore } from '@/stores/gateway'
 import { cn } from '@/lib/utils'
 import {
   Search,
@@ -35,6 +36,7 @@ const categoryConfig: Record<string, { color: string; label: string }> = {
 }
 
 export function Prompts() {
+  useGatewayStore() // For future use
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showStarred, setShowStarred] = useState(false)

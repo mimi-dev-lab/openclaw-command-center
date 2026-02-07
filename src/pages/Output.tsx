@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { useGatewayStore } from '@/stores/gateway'
 import { cn, formatBytes } from '@/lib/utils'
 import {
-  FileOutput,
   Search,
   Image,
   FileText,
@@ -16,6 +16,7 @@ import {
   FolderOpen,
   HardDrive,
   Filter,
+  FileOutput,
 } from 'lucide-react'
 
 const outputFiles = [
@@ -35,6 +36,7 @@ const typeConfig: Record<string, { color: string; label: string }> = {
 }
 
 export function Output() {
+  useGatewayStore() // For future use
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)

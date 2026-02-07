@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { useGatewayStore } from '@/stores/gateway'
 import { cn } from '@/lib/utils'
 import {
   FolderOpen,
@@ -35,6 +36,7 @@ const typeConfig: Record<string, { icon: typeof Code; color: string; label: stri
 }
 
 export function Projects() {
+  useGatewayStore() // For future use
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
