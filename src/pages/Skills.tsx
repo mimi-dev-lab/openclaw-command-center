@@ -1,25 +1,25 @@
 import { useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { useGatewayStore } from '@/stores/gateway'
 import { cn } from '@/lib/utils'
 import {
   Zap,
   Search,
   Download,
   RefreshCw,
-  Settings,
   Code,
   Image,
   Calendar,
-  MessageSquare,
   Terminal,
   Globe,
   Brain,
   TrendingUp,
   Package,
-  Play,
-  Filter,
+  ExternalLink,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react'
 
 const skills = [
@@ -59,93 +59,117 @@ const skills = [
     enabled: true,
     category: '基础设施',
     icon: Globe,
-    uses: 98,
+    uses: 89,
     trend: 15,
-    source: 'custom',
+    source: 'builtin',
   },
   {
-    name: 'coding-agent',
-    description: '运行 Claude Code',
+    name: 'stock-analysis',
+    description: '股票分析和投资组合',
     enabled: true,
-    category: '开发',
-    icon: Terminal,
-    uses: 145,
-    trend: 32,
-    source: 'custom',
-  },
-  {
-    name: 'gemini-subagent',
-    description: '调用 Gemini 任务',
-    enabled: true,
-    category: 'AI',
-    icon: Zap,
-    uses: 87,
+    category: '金融',
+    icon: TrendingUp,
+    uses: 67,
     trend: 45,
     source: 'custom',
   },
   {
     name: 'hippocampus',
-    description: 'AI 记忆器官',
+    description: '长期记忆系统',
     enabled: true,
-    category: '记忆',
+    category: '核心',
     icon: Brain,
-    uses: 312,
+    uses: 1247,
     trend: 8,
     source: 'custom',
   },
   {
-    name: 'discord',
-    description: 'Discord 消息管理',
+    name: 'coding-agent',
+    description: '运行 Claude Code / Codex',
     enabled: true,
-    category: '通讯',
-    icon: MessageSquare,
-    uses: 567,
-    trend: 3,
-    source: 'builtin',
+    category: '开发',
+    icon: Terminal,
+    uses: 45,
+    trend: 0,
+    source: 'custom',
+  },
+  {
+    name: 'remind-me',
+    description: '自然语言设置提醒',
+    enabled: true,
+    category: '效率',
+    icon: Calendar,
+    uses: 123,
+    trend: 5,
+    source: 'custom',
   },
 ]
 
-const categories = [
-  { id: 'all', label: '全部', count: 62 },
-  { id: '开发', label: '开发', count: 12 },
-  { id: '创意', label: '创意', count: 8 },
-  { id: '效率', label: '效率', count: 10 },
-  { id: '通讯', label: '通讯', count: 6 },
-  { id: 'AI', label: 'AI', count: 5 },
-]
+const categories = ['全部', '核心', '开发', '效率', '创意', '金融', '基础设施']
 
 export function Skills() {
+  useGatewayStore() // For future use
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [showFilters, setShowFilters] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('全部')
+  const [selectedSkill, setSelectedSkill] = useState<typeof skills[0] | null>(null)
 
   const filteredSkills = skills.filter((skill) => {
-    if (selectedCategory !== 'all' && skill.category !== selectedCategory) return false
+    if (selectedCategory !== '全部' && skill.category !== selectedCategory) return false
     if (searchQuery && !skill.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   })
 
-  const totalUses = skills.reduce((sum, s) => sum + s.uses, 0)
+  const stats = {
+    total: skills.length,
+    enabled: skills.filter(s => s.enabled).length,
+    builtin: skills.filter(s => s.source === 'builtin').length,
+    custom: skills.filter(s => s.source === 'custom').length,
+  }
 
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-[var(--color-text-primary)]">技能库</h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">管理已安装技能</p>
+          <h1 className="text-xl lg:text-2xl font-bold text-[var(--color-text-primary)]">技能</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">浏览和管理 Skills</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" disabled>
             <RefreshCw className="size-4" />
-            <span className="hidden sm:inline ml-1.5">检查更新</span>
           </Button>
-          <Button size="sm">
+          <Button size="sm" disabled>
             <Download className="size-4" />
             <span className="hidden sm:inline ml-1.5">安装</span>
           </Button>
         </div>
       </div>
+
+      {/* Info Card */}
+      <Card className="border-blue-500/30 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+              <Package className="size-5 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-blue-400">Skill 市场</p>
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                当前显示已安装的 Skills。访问 ClawdHub 安装更多 Skills。
+              </p>
+            </div>
+            <a 
+              href="https://clawdhub.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            >
+              <ExternalLink className="size-4" />
+              ClawdHub
+            </a>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -155,7 +179,7 @@ export function Skills() {
               <Zap className="size-5 lg:size-6 text-indigo-400" />
             </div>
             <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">62</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{stats.total}</p>
               <p className="text-xs text-[var(--color-text-muted)]">已安装</p>
             </div>
           </div>
@@ -163,11 +187,11 @@ export function Skills() {
         <Card className="p-3 lg:p-4">
           <div className="flex items-center gap-3">
             <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
-              <Play className="size-5 lg:size-6 text-green-400" />
+              <Zap className="size-5 lg:size-6 text-green-400" />
             </div>
             <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">58</p>
-              <p className="text-xs text-[var(--color-text-muted)]">已启用</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{stats.enabled}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">启用</p>
             </div>
           </div>
         </Card>
@@ -177,19 +201,19 @@ export function Skills() {
               <Package className="size-5 lg:size-6 text-blue-400" />
             </div>
             <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">23</p>
-              <p className="text-xs text-[var(--color-text-muted)]">ClawdHub</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{stats.builtin}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">内置</p>
             </div>
           </div>
         </Card>
         <Card className="p-3 lg:p-4">
           <div className="flex items-center gap-3">
             <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-              <TrendingUp className="size-5 lg:size-6 text-amber-400" />
+              <Code className="size-5 lg:size-6 text-amber-400" />
             </div>
             <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{totalUses.toLocaleString()}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">总调用</p>
+              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{stats.custom}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">自定义</p>
             </div>
           </div>
         </Card>
@@ -201,7 +225,7 @@ export function Skills() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="搜索技能..."
+            placeholder="搜索 Skills..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
@@ -212,118 +236,95 @@ export function Skills() {
             )}
           />
         </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="sm:hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)]"
-        >
-          <Filter className="size-4" />
-          筛选
-        </button>
-      </div>
-
-      {/* Mobile Filters */}
-      {showFilters && (
-        <div className="sm:hidden flex flex-wrap gap-2">
-          {categories.map((category) => (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {categories.slice(0, 5).map((cat) => (
             <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                selectedCategory === category.id
+                'px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all',
+                selectedCategory === cat
                   ? 'bg-[var(--color-accent)] text-white'
                   : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)]'
               )}
             >
-              {category.label} ({category.count})
+              {cat}
             </button>
           ))}
         </div>
-      )}
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-        {/* Desktop Categories */}
-        <div className="hidden lg:block lg:col-span-3">
-          <Card>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm text-[var(--color-text-muted)]">分类</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-[var(--color-border-subtle)]">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-4 py-3 text-left transition-all',
-                      'hover:bg-[var(--color-surface-hover)]',
-                      selectedCategory === category.id &&
-                        'bg-gradient-to-r from-indigo-500/10 to-purple-500/5 border-l-2 border-[var(--color-accent)]'
-                    )}
-                  >
-                    <span className={cn(
-                      'font-medium text-sm',
-                      selectedCategory === category.id ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'
-                    )}>
-                      {category.label}
-                    </span>
-                    <span className={cn(
-                      'text-xs px-2 py-0.5 rounded-md',
-                      selectedCategory === category.id 
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]'
-                    )}>
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
+      {/* Skills Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredSkills.map((skill) => (
+          <Card 
+            key={skill.name}
+            className={cn(
+              'overflow-hidden cursor-pointer transition-all hover:border-[var(--color-accent)]/50',
+              selectedSkill?.name === skill.name && 'border-[var(--color-accent)]'
+            )}
+            onClick={() => setSelectedSkill(skill)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className={cn(
+                  'size-11 rounded-xl flex items-center justify-center shrink-0',
+                  skill.enabled 
+                    ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20' 
+                    : 'bg-[var(--color-surface-elevated)]'
+                )}>
+                  <skill.icon className={cn(
+                    'size-5',
+                    skill.enabled ? 'text-indigo-400' : 'text-[var(--color-text-muted)]'
+                  )} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm text-[var(--color-text-primary)] truncate">
+                      {skill.name}
+                    </h3>
+                    <Badge 
+                      variant={skill.source === 'builtin' ? 'info' : 'default'} 
+                      className="text-[10px] shrink-0"
+                    >
+                      {skill.source === 'builtin' ? '内置' : '自定义'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-2">
+                    {skill.description}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-subtle)]">
+                <span className="text-xs text-[var(--color-text-muted)]">
+                  {skill.uses} 次使用
+                </span>
+                <div className={cn(
+                  'flex items-center gap-0.5 text-xs font-medium',
+                  skill.trend >= 0 ? 'text-green-400' : 'text-red-400'
+                )}>
+                  {skill.trend >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+                  {Math.abs(skill.trend)}%
+                </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Skill List */}
-        <div className="lg:col-span-9 space-y-3">
-          {filteredSkills.map((skill) => (
-            <Card key={skill.name} hover className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center shrink-0">
-                    <skill.icon className="size-5 lg:size-6 text-indigo-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-[var(--color-text-primary)]">{skill.name}</p>
-                      {skill.enabled && <Badge variant="success" className="text-[10px]">启用</Badge>}
-                      {skill.source === 'custom' && <Badge variant="info" className="text-[10px]">自定义</Badge>}
-                    </div>
-                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-1">
-                      {skill.description}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 flex-wrap">
-                      <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-                        <Play className="size-3" />
-                        {skill.uses} 次
-                      </span>
-                      <span className={cn(
-                        'text-xs font-medium flex items-center gap-0.5',
-                        skill.trend >= 0 ? 'text-green-400' : 'text-red-400'
-                      )}>
-                        <TrendingUp className={cn('size-3', skill.trend < 0 && 'rotate-180')} />
-                        {skill.trend >= 0 ? '+' : ''}{skill.trend}%
-                      </span>
-                      <button className="text-xs text-[var(--color-accent)] flex items-center gap-1">
-                        <Settings className="size-3" />
-                        配置
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        ))}
       </div>
+
+      {filteredSkills.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center">
+            <Zap className="size-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">
+              没有匹配的 Skills
+            </h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              尝试调整搜索条件或分类筛选
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
