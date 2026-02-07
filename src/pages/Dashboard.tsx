@@ -1,80 +1,115 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { ConnectionPanel } from '@/components/ConnectionPanel'
+import { useGatewayStore } from '@/stores/gateway'
 import {
   Activity,
-  Cpu,
-  HardDrive,
   Clock,
-  Zap,
   MessageSquare,
-  FolderOpen,
-  Brain,
   RefreshCw,
   Play,
-  ArrowUpRight,
-  ArrowDownRight,
   Sparkles,
   Terminal,
   Send,
+  WifiOff,
+  AlertCircle,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { formatDuration, formatBytes } from '@/lib/utils'
+import { formatDuration } from '@/lib/utils'
 
-// Mock data
-const mockData = {
-  status: 'running' as const,
-  uptime: 86400000 * 3 + 3600000 * 5 + 60000 * 42,
-  memory: { used: 256 * 1024 * 1024, total: 512 * 1024 * 1024 },
-  cpu: 12,
-  version: '1.2.0',
-  nodeVersion: 'v25.5.0',
-  model: 'claude-opus-4-5',
-  skills: 62,
-  sessions: 15,
-  projects: 18,
-  memoryFiles: 24,
-  cronJobs: 8,
-  todayMessages: 156,
-  tokensUsed: '1.2M',
-  channels: [
-    { name: 'Discord', emoji: '🎮', status: 'connected' as const, messagesIn: 1250, messagesOut: 890 },
-    { name: 'Telegram', emoji: '✈️', status: 'connected' as const, messagesIn: 340, messagesOut: 280 },
-  ],
-  recentActivity: [
-    { type: 'message', icon: Send, message: '回复了 #mimibot', time: '2分钟前', color: 'text-blue-400' },
-    { type: 'cron', icon: Clock, message: 'Heartbeat 成功', time: '5分钟前', color: 'text-green-400' },
-    { type: 'memory', icon: Brain, message: '更新了记忆', time: '1小时前', color: 'text-purple-400' },
-  ],
-  topSkills: [
-    { name: 'github', uses: 234, trend: 12 },
-    { name: 'image-gen', uses: 189, trend: 28 },
-    { name: 'gog', uses: 156, trend: -5 },
-  ],
+// Channel emoji mapping
+const channelEmojis: Record<string, string> = {
+  discord: '🎮',
+  telegram: '✈️',
+  whatsapp: '💬',
+  signal: '🔐',
+  slack: '💼',
+  imessage: '🍎',
 }
 
 export function Dashboard() {
-  const [data, setData] = useState(mockData)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { 
+    isConnected, 
+    isLoading, 
+    error,
+    sessions, 
+    cronJobs, 
+    channels, 
+    agents,
+    systemInfo,
+    healthHistory,
+    refresh,
+    restartGateway,
+  } = useGatewayStore()
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setIsRefreshing(false)
+  const [isRestarting, setIsRestarting] = useState(false)
+
+  // Auto refresh every 30s when connected
+  useEffect(() => {
+    if (!isConnected) return
+    const interval = setInterval(() => refresh(), 30000)
+    return () => clearInterval(interval)
+  }, [isConnected, refresh])
+
+  const handleRestart = async () => {
+    setIsRestarting(true)
+    await restartGateway()
+    setTimeout(() => {
+      setIsRestarting(false)
+      refresh()
+    }, 3000)
   }
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setData((prev) => ({
-        ...prev,
-        uptime: prev.uptime + 30000,
-        cpu: Math.max(5, Math.min(95, prev.cpu + (Math.random() - 0.5) * 10)),
-      }))
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  // Calculate stats
+  const totalSessions = sessions.length
+  const activeSessions = sessions.filter(s => {
+    if (!s.lastActivityAt) return false
+    const lastActivity = new Date(s.lastActivityAt).getTime()
+    return Date.now() - lastActivity < 24 * 60 * 60 * 1000 // 24h
+  }).length
+  const totalTokens = sessions.reduce((sum, s) => sum + (s.tokenCount || 0), 0)
+  const enabledCronJobs = cronJobs.filter(j => j.enabled).length
 
-  const memoryPercent = Math.round((data.memory.used / data.memory.total) * 100)
+  // Health status
+  const lastHealth = healthHistory[healthHistory.length - 1]
+  const healthOk = lastHealth?.ok ?? true
+  const avgLatency = healthHistory.length > 0 
+    ? Math.round(healthHistory.reduce((sum, h) => sum + (h.latencyMs || 0), 0) / healthHistory.length)
+    : 0
+
+  // Not connected - show connection panel
+  if (!isConnected) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-xl lg:text-2xl font-bold text-[var(--color-text-primary)]">仪表盘</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+            连接到 Gateway 查看实时状态
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ConnectionPanel />
+          
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center">
+              <WifiOff className="size-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-2">
+                未连接到 Gateway
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                请在左侧输入 Gateway 地址和 Token 进行连接
+              </p>
+              <div className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-elevated)] rounded-lg p-3 font-mono">
+                $ openclaw dashboard
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -87,23 +122,28 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
-            <Sparkles className="size-4 text-[var(--color-accent)]" />
-            <span className="text-xs font-medium text-[var(--color-text-primary)]">{data.model}</span>
-          </div>
+          <ConnectionPanel compact />
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
+            onClick={() => refresh()}
+            disabled={isLoading}
           >
-            <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`size-4 ${isLoading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline ml-2">刷新</span>
           </Button>
         </div>
       </div>
 
-      {/* Main Stats - Scrollable on mobile */}
+      {/* Error Alert */}
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+          <AlertCircle className="size-4" />
+          <span className="text-sm">{error}</span>
+        </div>
+      )}
+
+      {/* Main Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
         {/* Uptime */}
         <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20">
@@ -112,77 +152,50 @@ export function Dashboard() {
               <div className="size-8 lg:size-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                 <Clock className="size-4 lg:size-5 text-green-400" />
               </div>
-              <Badge variant="success" className="text-[10px] lg:text-xs">运行中</Badge>
+              <Badge variant={healthOk ? 'success' : 'error'}>
+                {healthOk ? '健康' : '异常'}
+              </Badge>
             </div>
             <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
-              {formatDuration(data.uptime)}
+              {systemInfo?.uptimeMs ? formatDuration(systemInfo.uptimeMs) : '--'}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">运行时间</p>
           </CardContent>
         </Card>
 
-        {/* Memory */}
+        {/* Latency */}
         <Card>
           <CardContent className="p-3 lg:p-5">
             <div className="flex items-center justify-between mb-2">
               <div className="size-8 lg:size-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <HardDrive className="size-4 lg:size-5 text-blue-400" />
+                <Activity className="size-4 lg:size-5 text-blue-400" />
               </div>
-              <span className="text-xs font-medium text-[var(--color-text-muted)]">{memoryPercent}%</span>
             </div>
             <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)]">
-              {formatBytes(data.memory.used)}
+              {avgLatency}ms
             </p>
-            <div className="mt-1.5 h-1 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
-                style={{ width: `${memoryPercent}%` }}
-              />
-            </div>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">平均延迟</p>
           </CardContent>
         </Card>
 
-        {/* CPU */}
-        <Card>
-          <CardContent className="p-3 lg:p-5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="size-8 lg:size-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <Cpu className="size-4 lg:size-5 text-orange-400" />
-              </div>
-            </div>
-            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
-              {Math.round(data.cpu)}%
-            </p>
-            <div className="mt-1.5 h-1 bg-[var(--color-surface-elevated)] rounded-full overflow-hidden">
-              <div 
-                className={`h-full rounded-full ${data.cpu > 80 ? 'bg-red-500' : 'bg-green-500'}`}
-                style={{ width: `${data.cpu}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Messages */}
+        {/* Sessions */}
         <Card>
           <CardContent className="p-3 lg:p-5">
             <div className="flex items-center justify-between mb-2">
               <div className="size-8 lg:size-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                 <MessageSquare className="size-4 lg:size-5 text-purple-400" />
               </div>
-              <div className="flex items-center gap-0.5 text-green-400 text-xs">
-                <ArrowUpRight className="size-3" />
-                +23%
-              </div>
+              <span className="text-xs font-medium text-green-400">{activeSessions} 活跃</span>
             </div>
             <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
-              {data.todayMessages}
+              {totalSessions}
             </p>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">今日消息</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">会话</p>
           </CardContent>
         </Card>
 
         {/* Tokens */}
-        <Card className="col-span-2 sm:col-span-1">
+        <Card>
           <CardContent className="p-3 lg:p-5">
             <div className="flex items-center justify-between mb-2">
               <div className="size-8 lg:size-10 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
@@ -190,62 +203,59 @@ export function Dashboard() {
               </div>
             </div>
             <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)]">
-              {data.tokensUsed}
+              {totalTokens > 1000000 
+                ? `${(totalTokens / 1000000).toFixed(1)}M` 
+                : totalTokens > 1000 
+                  ? `${(totalTokens / 1000).toFixed(1)}K`
+                  : totalTokens}
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Tokens</p>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Resource Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <Card className="p-3 lg:p-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
-              <Zap className="size-5 lg:size-6 text-indigo-400" />
+        {/* Cron Jobs */}
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="p-3 lg:p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="size-8 lg:size-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <Clock className="size-4 lg:size-5 text-amber-400" />
+              </div>
             </div>
-            <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.skills}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">技能</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3 lg:p-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-              <FolderOpen className="size-5 lg:size-6 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.projects}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">项目</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3 lg:p-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 flex items-center justify-center">
-              <Brain className="size-5 lg:size-6 text-pink-400" />
-            </div>
-            <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.memoryFiles}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">记忆</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3 lg:p-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-              <Clock className="size-5 lg:size-6 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-xl lg:text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">{data.cronJobs}</p>
-              <p className="text-xs text-[var(--color-text-muted)]">定时任务</p>
-            </div>
-          </div>
+            <p className="text-lg lg:text-2xl font-bold text-[var(--color-text-primary)]">
+              {enabledCronJobs}/{cronJobs.length}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">定时任务</p>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Three Column Layout - Stack on mobile */}
+      {/* Agents Stats */}
+      {agents.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4">
+          {agents.map((agent) => (
+            <Card key={agent.id} className="p-3 lg:p-4">
+              <div className="flex items-center gap-3">
+                <div className="size-10 lg:size-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+                  <Sparkles className="size-5 lg:size-6 text-indigo-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                      {agent.name || agent.id}
+                    </p>
+                    {agent.isDefault && (
+                      <Badge variant="info" className="text-[10px]">默认</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">{agent.sessionCount} 会话</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Three Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Channel Status */}
         <Card>
@@ -256,89 +266,128 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-[var(--color-border-subtle)]">
-              {data.channels.map((channel) => (
-                <div key={channel.name} className="px-4 lg:px-5 py-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span>{channel.emoji}</span>
-                      <span className="font-medium text-sm text-[var(--color-text-primary)]">{channel.name}</span>
+            {channels.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                暂无配置通道
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--color-border-subtle)]">
+                {channels.map((channel) => (
+                  <div key={channel.id} className="px-4 lg:px-5 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span>{channelEmojis[channel.id] || '📡'}</span>
+                        <span className="font-medium text-sm text-[var(--color-text-primary)]">
+                          {channel.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className={`size-2 rounded-full ${channel.connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                        <span className={`text-xs ${channel.connected ? 'text-green-400' : 'text-red-400'}`}>
+                          {channel.connected ? '在线' : '离线'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2 rounded-full bg-green-400 animate-pulse" />
-                      <span className="text-xs text-green-400">在线</span>
-                    </div>
+                    {channel.botName && (
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        @{channel.botName}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-                    <span className="flex items-center gap-1">
-                      <ArrowDownRight className="size-3 text-blue-400" />
-                      {channel.messagesIn}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ArrowUpRight className="size-3 text-green-400" />
-                      {channel.messagesOut}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Recent Sessions */}
+        <Card>
+          <CardHeader className="pb-2 lg:pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MessageSquare className="size-4 text-[var(--color-accent)]" />
+              最近会话
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {sessions.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                暂无会话
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--color-border-subtle)]">
+                {sessions.slice(0, 5).map((session) => (
+                  <div key={session.key} className="flex items-center gap-3 px-4 lg:px-5 py-3">
+                    <div className="size-7 lg:size-8 rounded-lg bg-[var(--color-surface-elevated)] flex items-center justify-center text-purple-400">
+                      <Send className="size-3.5 lg:size-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[var(--color-text-primary)] truncate">
+                        {session.displayName || session.label || session.channel || 'Session'}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        {session.tokenCount ? `${session.tokenCount.toLocaleString()} tokens` : '--'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Cron Jobs */}
         <Card>
           <CardHeader className="pb-2 lg:pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="size-4 text-[var(--color-accent)]" />
-              最近活动
+              定时任务
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-[var(--color-border-subtle)]">
-              {data.recentActivity.map((activity, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 lg:px-5 py-3">
-                  <div className={`size-7 lg:size-8 rounded-lg bg-[var(--color-surface-elevated)] flex items-center justify-center ${activity.color}`}>
-                    <activity.icon className="size-3.5 lg:size-4" />
+            {cronJobs.length === 0 ? (
+              <div className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                暂无定时任务
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--color-border-subtle)]">
+                {cronJobs.slice(0, 5).map((job) => (
+                  <div key={job.id} className="flex items-center gap-3 px-4 lg:px-5 py-3">
+                    <span className="text-sm font-medium text-[var(--color-text-muted)] w-4">
+                      {job.enabled ? '✓' : '○'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                        {job.name || job.id}
+                      </p>
+                      <p className="text-xs text-[var(--color-text-muted)]">
+                        {job.schedule.kind === 'cron' 
+                          ? job.schedule.expr 
+                          : job.schedule.kind === 'every'
+                            ? `每 ${Math.round((job.schedule.everyMs || 0) / 60000)} 分钟`
+                            : job.schedule.kind}
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={
+                        job.state?.lastStatus === 'success' 
+                          ? 'success' 
+                          : job.state?.lastStatus === 'error'
+                            ? 'error'
+                            : 'default'
+                      }
+                      className="text-[10px]"
+                    >
+                      {job.state?.lastStatus || '待运行'}
+                    </Badge>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[var(--color-text-primary)] truncate">{activity.message}</p>
-                    <p className="text-xs text-[var(--color-text-muted)]">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Skills */}
-        <Card>
-          <CardHeader className="pb-2 lg:pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Zap className="size-4 text-[var(--color-accent)]" />
-              热门技能
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-[var(--color-border-subtle)]">
-              {data.topSkills.map((skill, i) => (
-                <div key={skill.name} className="flex items-center gap-3 px-4 lg:px-5 py-3">
-                  <span className="text-sm font-medium text-[var(--color-text-muted)] w-4">{i + 1}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">{skill.name}</p>
-                    <p className="text-xs text-[var(--color-text-muted)]">{skill.uses} 次</p>
-                  </div>
-                  <div className={`flex items-center gap-0.5 text-xs font-medium ${skill.trend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {skill.trend >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                    {Math.abs(skill.trend)}%
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions - Mobile friendly */}
+      {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-2 lg:pb-3">
           <CardTitle className="text-sm">快捷操作</CardTitle>
@@ -349,8 +398,14 @@ export function Dashboard() {
               <Play className="size-4 mr-1.5" />
               Heartbeat
             </Button>
-            <Button variant="secondary" size="sm" className="flex-1 sm:flex-none">
-              <RefreshCw className="size-4 mr-1.5" />
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="flex-1 sm:flex-none"
+              onClick={handleRestart}
+              disabled={isRestarting}
+            >
+              <RefreshCw className={`size-4 mr-1.5 ${isRestarting ? 'animate-spin' : ''}`} />
               重启 Gateway
             </Button>
           </div>
