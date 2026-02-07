@@ -83,8 +83,26 @@ function formatLastRun(lastRunAtMs?: number): string {
 }
 
 export function Cron() {
-  const { cronJobs, isConnected, isLoading, refresh } = useGatewayStore()
+  const { cronJobs, isConnected, isLoading, refresh, url, token } = useGatewayStore()
   const [filter, setFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
+  const [runningJob, setRunningJob] = useState<string | null>(null)
+
+  const handleRunJob = async (jobId: string) => {
+    if (!url || !token) return
+    setRunningJob(jobId)
+    try {
+      const { gatewayCall } = await import('@/lib/gateway-client')
+      await gatewayCall({ url, token }, 'cron.run', { jobId })
+      // Refresh to get updated status
+      setTimeout(() => {
+        refresh()
+        setRunningJob(null)
+      }, 1000)
+    } catch (err) {
+      console.error('Failed to run job:', err)
+      setRunningJob(null)
+    }
+  }
 
   useEffect(() => {
     if (isConnected) refresh()
@@ -301,10 +319,12 @@ export function Cron() {
                       </div>
                       <div className="flex items-center gap-1">
                         <button 
-                          className="p-1.5 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]"
+                          className="p-1.5 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] disabled:opacity-50"
                           title="立即运行"
+                          onClick={() => handleRunJob(job.id)}
+                          disabled={runningJob === job.id || !job.enabled}
                         >
-                          <Play className="size-4" />
+                          <Play className={`size-4 ${runningJob === job.id ? 'animate-pulse' : ''}`} />
                         </button>
                         <button 
                           className="p-1.5 rounded-lg hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]"

@@ -352,4 +352,60 @@ export const useGatewayStore = create<GatewayState>((set, get) => ({
       return false;
     }
   },
+
+  // Config management
+  fetchConfig: async (): Promise<{ config: Record<string, unknown>; hash: string } | null> => {
+    const { url, token } = get();
+    if (!url || !token) return null;
+    try {
+      const result = await gatewayCall<{ payload: string; hash: string }>(
+        { url, token },
+        'config.get',
+        {}
+      );
+      return { 
+        config: JSON.parse(result.payload || '{}'), 
+        hash: result.hash 
+      };
+    } catch (err) {
+      console.error('Failed to fetch config:', err);
+      return null;
+    }
+  },
+
+  patchConfig: async (patch: Record<string, unknown>, hash: string): Promise<boolean> => {
+    const { url, token } = get();
+    if (!url || !token) return false;
+    try {
+      await gatewayCall(
+        { url, token },
+        'config.patch',
+        { 
+          raw: JSON.stringify(patch, null, 2),
+          baseHash: hash,
+          restartDelayMs: 2000
+        }
+      );
+      return true;
+    } catch (err) {
+      console.error('Failed to patch config:', err);
+      throw err;
+    }
+  },
+
+  runCronJob: async (jobId: string): Promise<boolean> => {
+    const { url, token } = get();
+    if (!url || !token) return false;
+    try {
+      await gatewayCall(
+        { url, token },
+        'cron.run',
+        { jobId }
+      );
+      return true;
+    } catch (err) {
+      console.error('Failed to run cron job:', err);
+      return false;
+    }
+  },
 }));
